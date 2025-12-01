@@ -1,6 +1,8 @@
 # https://adventofcode.com/2025/day/1
 
-input = readlines("2025/data/day_1.txt")
+include("utils.jl")
+
+input = readlines(joinpath(@__DIR__, "../data/day_1.txt"))
 
 function part_1(input)
     pos = 50
@@ -19,11 +21,32 @@ function part_1(input)
         if pos == 0
             nzeros += 1
         end
-        @info "$dir $amount $pos"
+        @debug "$dir $amount $pos"
     end
     nzeros
 end
 @info part_1(input)
+
+function part_1_v2(input)
+    finalpos, nzeros = reduce(input, init=(50, 0)) do (pos, cnt), line
+         sgn, inc = first(line) == 'R' ?  +1 : -1, parse(Int, line[2:end])
+         newpos = mod(pos + sgn * inc, 100)
+         (newpos, cnt + (newpos == 0))
+    end
+    nzeros
+end
+@info part_1_v2(input)
+
+function part_1_v3(input)
+    dir  = first.(input)
+    sgn  = @. 2(dir == 'R') - 1
+    incs = @. parse(Int, tail(input))
+    incs .*= sgn
+    positions = cumsum([50; incs])
+    wrapped = mod.(positions, 100)
+    count(==(0), tail(wrapped))
+end
+@info part_1_v3(input)
 
 function part_2(input)
     pos = 50
@@ -44,7 +67,7 @@ function part_2(input)
                 nzeros += 1
             end
         end
-        @info "$dir $amount $pos"
+        @debug "$dir $amount $pos"
     end
     nzeros
 end
