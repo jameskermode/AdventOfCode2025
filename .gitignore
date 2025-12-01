@@ -1,0 +1,28 @@
+# Julia
+Manifest.toml
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+*.ji
+deps/deps.jl
+
+# Uiua
+*.uasm
+
+# Data files (puzzle inputs are personal and shouldn't be shared)
+data/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
