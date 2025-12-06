@@ -20,10 +20,23 @@ Solutions are implemented in:
    Pkg.activate(".")
    Pkg.instantiate()
    ```
-3. Run a solution:
+3. Run a single solution:
    ```bash
-   julia julia/day1.jl
+   julia julia/day_1.jl
    ```
+
+#### Test Runner
+
+Run all solutions with timing and answer verification:
+
+```bash
+julia julia/run.jl           # Run all days with full input
+julia julia/run.jl --test    # Run all days with test input
+julia julia/run.jl 3         # Run day 3 only
+julia julia/run.jl 3 --test  # Run day 3 with test input
+```
+
+To add a new day, create `julia/day_N.jl` and add expected answers to `julia/answers.jl`.
 
 ### Uiua
 
