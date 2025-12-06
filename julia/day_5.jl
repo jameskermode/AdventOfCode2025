@@ -1,7 +1,5 @@
 # https://adventofcode.com/2025/day/5
 
-input = readlines("data/day_5.txt")
-
 function parse_input(input)
     idx = findfirst(isempty, input)
     ranges = [UnitRange(parse.(Int, split(line, "-"))...) for line in input[1:idx-1]]
@@ -14,7 +12,6 @@ function part_1(input)
     ranges, items = parse_input(input)
     count(item -> any(r -> item in r, ranges), items)
 end
-@info part_1(input)
 
 function part_2(input)
     ranges, items = parse_input(input)
@@ -32,4 +29,9 @@ function part_2(input)
     push!(merged, current)
     sum(length, merged)
 end
-@info part_2(input)
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    input = readlines(joinpath(@__DIR__, "../data/day_5.txt"))
+    @info "Part 1" part_1(input)
+    @info "Part 2" part_2(input)
+end

@@ -1,17 +1,19 @@
 # https://adventofcode.com/2025/day/2
 
 include("utils.jl")
-input = readlines(joinpath(@__DIR__, "../data/day_2_test.txt"))
 
 function invalid(id, n=2)
-    d = digits(id)
-    (length(d) % n != 0) && return false
-    parts = Iterators.partition(d, length(d) ÷ n)
-    if allequal(parts)
-        @show id
-        return true
+    nd = ndigits(id)
+    (nd % n != 0) && return false
+    part_len = nd ÷ n
+    divisor = 10^part_len
+    first_part = id % divisor
+    remaining = id ÷ divisor
+    for _ in 2:n
+        (remaining % divisor != first_part) && return false
+        remaining ÷= divisor
     end
-    return false
+    true
 end
 
 function parse_input(input)
@@ -25,14 +27,21 @@ function part_1(input)
     mask = invalid.(ids)
     sum(ids[mask])
 end
-@info part_1(input)
+
+function invalid_any(id, ns=2:7)
+    for n in ns
+        invalid(id, n) && return true
+    end
+    false
+end
 
 function part_2(input)
     ids = parse_input(input)
-    mask = zeros(Bool, length(ids))
-    for n = 2:7
-        mask[invalid.(ids, n)] .= true
-    end
-    sum(ids[mask])
+    sum(id for id in ids if invalid_any(id))
 end
-@info part_2(input)
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    input = readlines(joinpath(@__DIR__, "../data/day_2.txt"))
+    @info "Part 1" part_1(input)
+    @info "Part 2" part_2(input)
+end

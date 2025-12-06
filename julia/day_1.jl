@@ -2,8 +2,6 @@
 
 include("utils.jl")
 
-input = readlines(joinpath(@__DIR__, "../data/day_1.txt"))
-
 function part_1(input)
     pos = 50
     nzeros = 0
@@ -20,8 +18,6 @@ function part_1(input)
     end
     nzeros
 end
-@info part_1(input)
-
 function part_1_v2(input)
     finalpos, nzeros = reduce(input, init=(50, 0)) do (pos, cnt), line
          sgn, inc = first(line) == 'R' ?  +1 : -1, parse(Int, line[2:end])
@@ -30,8 +26,6 @@ function part_1_v2(input)
     end
     nzeros
 end
-@info part_1_v2(input)
-
 function part_1_v3(input)
     dir  = first.(input)
     sgn  = @. 2(dir == 'R') - 1
@@ -41,8 +35,6 @@ function part_1_v3(input)
     wrapped = mod.(positions, 100)
     count(==(0), tail(wrapped))
 end
-@info part_1_v3(input)
-
 function part_2(input)
     pos = 50
     nzeros = 0
@@ -60,4 +52,9 @@ function part_2(input)
     end
     nzeros
 end
-@info part_2(input)
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    input = readlines(joinpath(@__DIR__, "../data/day_1.txt"))
+    @info "Part 1" part_1(input)
+    @info "Part 2" part_2(input)
+end
