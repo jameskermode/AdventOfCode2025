@@ -20,7 +20,7 @@ function part_2(input)
     current = first(ranges)
     for r in Iterators.drop(ranges, 1)
         if first(r) <= last(current) + 1
-            current= first(current):max(last(current), last(r))
+            current = first(current):max(last(current), last(r))
         else
             push!(merged, current)
             current = r
