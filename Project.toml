@@ -1,2 +1,4 @@
 [deps]
 AdventOfCode = "7ef4cfdd-3fec-4d8b-b242-bcc5161d01d5"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"

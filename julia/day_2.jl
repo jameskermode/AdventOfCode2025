@@ -1,6 +1,7 @@
 # https://adventofcode.com/2025/day/2
 
 include("utils.jl")
+using Folds
 
 function invalid(id, n=2)
     nd = ndigits(id)
@@ -22,12 +23,6 @@ function parse_input(input)
     return reduce(vcat, ids)
 end
 
-function part_1(input)
-    ids = parse_input(input)
-    mask = invalid.(ids)
-    sum(ids[mask])
-end
-
 function invalid_any(id, ns=2:7)
     for n in ns
         invalid(id, n) && return true
@@ -35,9 +30,14 @@ function invalid_any(id, ns=2:7)
     false
 end
 
+function part_1(input)
+    ids = parse_input(input)
+    Folds.sum(id for id in ids if invalid(id))
+end
+
 function part_2(input)
     ids = parse_input(input)
-    sum(id for id in ids if invalid_any(id))
+    Folds.sum(id for id in ids if invalid_any(id))
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
