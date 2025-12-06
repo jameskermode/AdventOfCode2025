@@ -1,46 +1,35 @@
 # https://adventofcode.com/2025/day/4
 
-showgrid(grid) = println(join([join(row, "") for row in eachrow(grid)], "\n"))
-
 const DIRS8 = [CartesianIndex(dr, dc) for dr in -1:1, dc in -1:1 if !(dr == dc == 0)]
 
-function find_rolls(grid)
-    remove = zeros(Bool, size(grid))
-    for idx in CartesianIndices(grid)
-        grid[idx] == '@' || continue
-        nn = count(
-            checkbounds(Bool, grid, idx + d) && grid[idx + d] == '@'
-            for d in DIRS8
-        )
-        remove[idx] = nn < 4
-    end
-    remove
+function extract_cells(input)
+    Set(
+        CartesianIndex(r, c)
+        for (r, line) in enumerate(input)
+        for (c, ch) in enumerate(line)
+        if ch == '@'
+    )
+end
+
+function find_rolls(cells::Set{CartesianIndex{2}})
+    Set(idx for idx in cells if count(idx + d in cells for d in DIRS8) < 4)
 end
 
 function part_1(input)
-    grid = parse_grid(input)
-    sum(find_rolls(grid))
+    cells = extract_cells(input)
+    length(find_rolls(cells))
 end
 
-function part_2(input; verbose=false)
-    grid = parse_grid(input)
+function part_2(input)
+    cells = extract_cells(input)
     total = 0
-    verbose && showgrid(grid)
     while true
-        remove = find_rolls(grid)
-        (removed = sum(remove)) == 0 && break
-        grid[remove] .= '.'
-        total += removed
-        if verbose
-            @info "Removing $(removed)"
-            showgrid(grid)
-        end
+        to_remove = find_rolls(cells)
+        isempty(to_remove) && break
+        setdiff!(cells, to_remove)
+        total += length(to_remove)
     end
     total
-end
-
-function parse_grid(input)
-    permutedims(hcat(collect.(input)...))
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
