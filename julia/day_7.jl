@@ -1,10 +1,8 @@
 # https://adventofcode.com/2025/day/7
 
-parse_grid(input) = permutedims(reduce(hcat, collect.(input)))
+include("utils.jl")
 
-show_grid(grid) = print(join(join.(eachrow(grid)), "\n"))
-
-Location = CartesianIndex{2}
+const Location = CartesianIndex{2}
 
 const DOWN  = Location(+1, 0)
 const LEFT  = Location(0, -1)
@@ -12,26 +10,26 @@ const RIGHT = Location(0, +1)
 
 function part_1(input; verbose=false)
     grid = parse_grid(input)
-    beams = Location[]
-    push!(beams, findfirst(==('S'), grid))
+    beams = Location[findfirst(==('S'), grid)]
+    next_beams = Location[]
     nsplit = 0
     for row in 2:size(grid, 1)
-        new_beams = Location[]
+        empty!(next_beams)
         for beam in beams
             next_loc = beam + DOWN
             next_val = grid[next_loc]
             if next_val == '.'
-                push!(new_beams, beam + DOWN)
+                push!(next_beams, beam + DOWN)
                 grid[next_loc] = '|'
             elseif next_val == '^'
                 nsplit += 1
                 for offset in (DOWN + LEFT, DOWN + RIGHT)
-                    push!(new_beams, beam + offset)
+                    push!(next_beams, beam + offset)
                     grid[beam + offset] = '|'
                 end
             end
         end
-        beams = new_beams
+        beams, next_beams = next_beams, beams
         if verbose
             println("Step $(row)")
             show_grid(grid)
@@ -43,7 +41,6 @@ end
 function part_2(input)
     grid = parse_grid(input)
     start = findfirst(==('S'), grid)
-    stack = Location[start]
     cache = Dict{Location, Int}()
 
     function count_paths(start_loc)
@@ -57,6 +54,8 @@ function part_2(input)
             1
         elseif grid[loc + DOWN] == '^'
             count_paths(loc + DOWN + LEFT) + count_paths(loc + DOWN + RIGHT)
+        else
+            0  # Dead end (shouldn't happen with valid input)
         end
 
         cache[start_loc] = result
@@ -86,4 +85,11 @@ function part_2_bottom_up(input)
 
     start = findfirst(==('S'), grid)
     paths[start]
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    input = readlines(joinpath(@__DIR__, "../data/day_7.txt"))
+    @info "Part 1" part_1(input)
+    @info "Part 2" part_2(input)
+    @info "Part 2 (bottom-up)" part_2_bottom_up(input)
 end
