@@ -115,8 +115,9 @@ function find_clusters_uf(p; N=10, find_single_cluster=false)
     num_components = n
 
     if find_single_cluster
-        # Process edges in sorted order until single cluster
-        for idx in sortperm(v)
+        # Process smallest edges until single cluster (~1.5% of edges suffices)
+        k = ceil(Int, 0.015 * n^2)
+        for idx in partialsortperm(v, 1:k)
             box = CartesianIndices(U)[idx]
             i, j = box[1], box[2]
             if uf_union!(uf, i, j)
@@ -126,6 +127,7 @@ function find_clusters_uf(p; N=10, find_single_cluster=false)
                 end
             end
         end
+        error("Clustering incomplete: $num_components components remain (k=$k insufficient)")
     else
         # Process N smallest edges
         for idx in partialsortperm(v, 1:N)
