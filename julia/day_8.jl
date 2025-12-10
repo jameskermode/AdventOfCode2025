@@ -3,7 +3,7 @@
 
 using LinearAlgebra
 
-parse_input(input) = permutedims(reduce(hcat, [parse.(Int, row) for row in split.(input, ",")]))
+include("utils.jl")
 
 function distance_matrix(p)
     G = p * p'
@@ -145,27 +145,27 @@ function find_clusters_uf(p; N=10, find_single_cluster=false)
 end
 
 function part_1_uf(input)
-    positions = parse_input(input)
+    positions = parse_csv(input)
     N = size(input, 1) == 20 ? 10 : 1000
     sizes = find_clusters_uf(positions; N)
     prod(partialsort(sizes, 1:3, rev=true))
 end
 
 function part_2_uf(input)
-    positions = parse_input(input)
+    positions = parse_csv(input)
     box = find_clusters_uf(positions; find_single_cluster=true)
     positions[box[1], 1] * positions[box[2], 1]
 end
 
 function part_1(input; verbose=false)
-    positions = parse_input(input)
+    positions = parse_csv(input)
     N = size(input, 1) == 20 ? 10 : 1000
     clusters = find_clusters(positions; N, verbose)
     prod(partialsort(length.(clusters), 1:3, rev=true))
 end
 
 function part_2(input; verbose=false)
-    positions = parse_input(input)
+    positions = parse_csv(input)
     box = find_clusters(positions; find_single_cluster=true, verbose)
     positions[box[1], 1] * positions[box[2], 1]
 end
