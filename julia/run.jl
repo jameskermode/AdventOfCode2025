@@ -45,20 +45,44 @@ end
 
 function run_day(day::Int; test::Bool=false, bench::Bool=false)
     mod = DAYS[day]
-    suffix = test ? "_test" : ""
-    input_file = joinpath(@__DIR__, "../data/day_$(day)$(suffix).txt")
+    answers = ANSWERS[day]
 
-    if !isfile(input_file)
-        println("  Input file not found: $input_file")
+    # Determine input files and expected answers for each part
+    # Some days have separate test inputs for part 2 (day_N_test2.txt)
+    suffix = test ? "_test" : ""
+    input_file_1 = joinpath(@__DIR__, "../data/day_$(day)$(suffix).txt")
+
+    # Check for separate test2 input for part 2
+    has_test2 = test && hasproperty(answers, :test2)
+    input_file_2 = has_test2 ? joinpath(@__DIR__, "../data/day_$(day)_test2.txt") : input_file_1
+
+    if !isfile(input_file_1)
+        println("  Input file not found: $input_file_1")
         return false
     end
 
-    input = readlines(input_file)
-    expected = test ? ANSWERS[day].test : ANSWERS[day].full
+    if has_test2 && !isfile(input_file_2)
+        println("  Input file not found: $input_file_2")
+        return false
+    end
+
+    input_1 = readlines(input_file_1)
+    input_2 = has_test2 ? readlines(input_file_2) : input_1
+
+    # Get expected answers
+    if test
+        expected_1 = answers.test[1]
+        expected_2 = has_test2 ? answers.test2[1] : answers.test[2]
+    else
+        expected_1, expected_2 = answers.full
+    end
 
     all_passed = true
 
-    for (part_num, (part_fn, expected_answer)) in enumerate([(mod.part_1, expected[1]), (mod.part_2, expected[2])])
+    for (part_num, part_fn, input, expected_answer) in [
+        (1, mod.part_1, input_1, expected_1),
+        (2, mod.part_2, input_2, expected_2)
+    ]
         local result, elapsed
 
         if bench
