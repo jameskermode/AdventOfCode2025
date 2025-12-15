@@ -40,13 +40,12 @@ function all_orientations(s::Shape)
 end
 
 area(s::Shape) = count(s)
-area(r::Rect) = size(r.grid)
 
 # Precompute for all orientations
 function prepare_pieces(shapes::Dict{Int,Shape}, counts::Vector{Int})
     # Each entry: (area, Vector of (orientation, offsets) pairs)
-    pieces = []
-        
+    pieces = Tuple{Int, Vector{Tuple{Shape, Vector{CartesianIndex{2}}}}}[]
+
     for (id, count) in enumerate(counts)
         count == 0 && continue
         base_shape = shapes[id - 1]  # 0-indexed in problem
@@ -58,74 +57,60 @@ function prepare_pieces(shapes::Dict{Int,Shape}, counts::Vector{Int})
             push!(pieces, (A, orientation_data))
         end
     end
-    
+
     sort!(pieces, by = first, rev = true)
-    [p[2] for p in pieces] # throw away area
+    [p[2] for p in pieces]  # throw away area
 end
 
 function can_place(grid::BitMatrix, shape::Shape, origin::CartesianIndex{2})
     shape_size = CartesianIndex(size(shape))
     stop = origin + shape_size - CartesianIndex(1, 1)
-    
+
     # Bounds check
     checkbounds(Bool, grid, origin) || return false
     checkbounds(Bool, grid, stop) || return false
-    
+
     # Overlap check - any cell where both grid and shape are true?
-    region = @view grid[origin[1]:stop[1], origin[2]:stop[2]]
-    !any(region .& shape)
+    # Use explicit loop to avoid allocations
+    @inbounds for j in axes(shape, 2), i in axes(shape, 1)
+        grid[origin[1] + i - 1, origin[2] + j - 1] && shape[i, j] && return false
+    end
+    true
 end
 
 function place!(grid::BitMatrix, shape::Shape, origin::CartesianIndex{2})
-    stop = origin + CartesianIndex(size(shape)) - CartesianIndex(1, 1)
-    region = @view grid[origin[1]:stop[1], origin[2]:stop[2]]
-    region .|= shape
+    @inbounds for j in axes(shape, 2), i in axes(shape, 1)
+        if shape[i, j]
+            grid[origin[1] + i - 1, origin[2] + j - 1] = true
+        end
+    end
 end
 
 function unplace!(grid::BitMatrix, shape::Shape, origin::CartesianIndex{2})
-    stop = origin + CartesianIndex(size(shape)) - CartesianIndex(1, 1)
-    region = @view grid[origin[1]:stop[1], origin[2]:stop[2]]
-    region .&= .!shape
-end
-
-function first_empty(grid::BitMatrix)
-    for r in axes(grid, 1)
-        for c in axes(grid, 2)
-            grid[r, c] || return CartesianIndex(r, c)
+    # Use explicit loop to avoid allocations from .!shape
+    @inbounds for j in axes(shape, 2), i in axes(shape, 1)
+        if shape[i, j]
+            grid[origin[1] + i - 1, origin[2] + j - 1] = false
         end
     end
-    nothing
 end
 
-function solve(grid::BitMatrix, pieces, piece_idx::Int, must_fill::Bool)
+function solve(grid::BitMatrix, pieces, piece_idx::Int)
     piece_idx > length(pieces) && return true
 
-    target = first_empty(grid)
-    isnothing(target) && return false
-    
-    for (shape, offsets) in pieces[piece_idx]
-        if must_fill
-            for offset in offsets
-                origin = target - offset + CartesianIndex(1, 1)
-                if can_place(grid, shape, origin)
-                     place!(grid, shape, origin)
-                     solve(grid, pieces, piece_idx + 1, must_fill) && return true
-                     unplace!(grid, shape, origin)
-                end
-            end
-        else
-            # Try all valid positions
-            for r in axes(grid, 1), c in axes(grid, 2)
-                origin = CartesianIndex(r, c)
-                if can_place(grid, shape, origin)
-                    place!(grid, shape, origin)
-                    solve(grid, pieces, piece_idx + 1, must_fill) && return true
-                    unplace!(grid, shape, origin)
-                end
+    for (shape, _) in pieces[piece_idx]
+        # Row-major iteration for consistent fill order
+        for r in axes(grid, 1), c in axes(grid, 2)
+            origin = CartesianIndex(r, c)
+            @inbounds grid[origin] && continue
+            if can_place(grid, shape, origin)
+                place!(grid, shape, origin)
+                solve(grid, pieces, piece_idx + 1) && return true
+                unplace!(grid, shape, origin)
             end
         end
     end
-    
+
     false
 end
 
@@ -137,8 +122,7 @@ function part_1(input)
         total_piece_area = sum(count(p[1][1]) for p in pieces)
         grid_area = length(rect.grid)
         total_piece_area > grid_area && continue
-        must_fill = total_piece_area == length(rect.grid)
-        valid = solve(rect.grid, pieces, 1, must_fill)
+        valid = solve(rect.grid, pieces, 1)
         @info "$(join(reverse(size(rect.grid)), "x"))) $(rect.counts) -> $valid"
         total += valid
     end
