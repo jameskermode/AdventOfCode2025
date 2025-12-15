@@ -69,20 +69,30 @@ function run_day(day::Int; test::Bool=false, bench::Bool=false)
     input_1 = readlines(input_file_1)
     input_2 = has_test2 ? readlines(input_file_2) : input_1
 
-    # Get expected answers
+    # Get expected answers (some days only have part 1)
     if test
         expected_1 = answers.test[1]
-        expected_2 = has_test2 ? answers.test2[1] : answers.test[2]
+        expected_2 = if has_test2
+            answers.test2[1]
+        elseif length(answers.test) >= 2
+            answers.test[2]
+        else
+            nothing
+        end
     else
-        expected_1, expected_2 = answers.full
+        expected_1 = answers.full[1]
+        expected_2 = length(answers.full) >= 2 ? answers.full[2] : nothing
     end
 
     all_passed = true
 
-    for (part_num, part_fn, input, expected_answer) in [
-        (1, mod.part_1, input_1, expected_1),
-        (2, mod.part_2, input_2, expected_2)
-    ]
+    # Build list of parts to run (skip part 2 if no expected answer)
+    parts_to_run = [(1, mod.part_1, input_1, expected_1)]
+    if expected_2 !== nothing
+        push!(parts_to_run, (2, mod.part_2, input_2, expected_2))
+    end
+
+    for (part_num, part_fn, input, expected_answer) in parts_to_run
         local result, elapsed
 
         if bench
